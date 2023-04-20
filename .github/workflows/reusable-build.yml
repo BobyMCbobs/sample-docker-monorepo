@@ -123,3 +123,7 @@ jobs:
           COSIGN_YES: "true"
         run: |
           cosign attest --predicate /tmp/sbom-spdx.json ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}
+      - name: image result
+        id: result
+        run: |
+          echo "Build, pushed and signed: ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}"
