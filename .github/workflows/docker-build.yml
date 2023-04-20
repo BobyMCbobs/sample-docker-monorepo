@@ -28,6 +28,7 @@ jobs:
           jq . <<< '${{ steps.prepare.outputs.matrix }}'
 
   build:
+    needs: prepare
     strategy:
       matrix:
         include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
