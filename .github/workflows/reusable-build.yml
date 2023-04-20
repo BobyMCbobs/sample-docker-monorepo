@@ -118,9 +118,6 @@ jobs:
           image: ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}
           artifact-name: sbom-spdx.json
           output-file: /tmp/sbom-spdx.json
-      - name: download unsigned sbom
-        run: |
-          cosign download sbom ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }} > /tmp/sbom-spdx.json
       - name: publish sbom blob as blob
         env:
           COSIGN_YES: "true"
