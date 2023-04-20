@@ -12,6 +12,9 @@ permissions:
   pull-requests: write
   id-token: write
 
+env:
+  FOLDER: apps
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -22,7 +25,7 @@ jobs:
       - uses: mikefarah/yq@master
       - id: set
         run: |
-          echo "matrix=$(find apps -mindepth 1 -maxdepth 1 -type d | xargs -n 1 basename | xargs | yq 'split(" ")|.[]|{"target":.}' -ojson | jq -rcM -s .)" >> $GITHUB_OUTPUT
+          echo "matrix=$(find $FOLDER -mindepth 1 -maxdepth 1 -type d | xargs -n 1 basename | xargs | yq 'split(" ")|.[]|{"target":.}' -ojson | jq -rcM -s .)" >> $GITHUB_OUTPUT
       - name: check output
         run: |
           jq . <<< '${{ steps.prepare.outputs.matrix }}'
