@@ -36,5 +36,5 @@ jobs:
     with:
       context: apps/${{ fromJSON(toJSON(matrix)).target }}
       dockerfile: apps/${{ fromJSON(toJSON(matrix)).target }}/Dockerfile
-      image: ${{ fromJSON(toJSON(matrix)).target }}
+      imageName: ${{ fromJSON(toJSON(matrix)).target }}
       platforms: 'linux/amd64,linux/arm64'
