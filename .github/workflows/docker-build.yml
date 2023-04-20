@@ -1,0 +1,38 @@
+name: build
+
+on:
+  push: {}
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+permissions:
+  packages: write
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: mikefarah/yq@master
+      - id: set
+        run: |
+          echo "matrix=$(find apps -mindepth 1 -maxdepth 1 -type d | xargs -n 1 basename | xargs | yq 'split(" ")' -ojson | jq -rcM)" >> $GITHUB_OUTPUT
+      - name: check output
+        run: |
+          jq . <<< '${{ steps.prepare.outputs.matrix }}'
+
+  build:
+    strategy:
+      matrix:
+        include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-build.yml@main
+    with:
+      context: apps/${{ matrix }}
+      dockerfile: apps/${{ matrix }}/Dockerfile
+      image: ${{ matrix }}
