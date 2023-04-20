@@ -1,0 +1,16 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: webthingy
+  namespace: sample-docker-monorepo
+spec:
+  template:
+    spec:
+      containers:
+        - image: ghcr.io/bobymcbobs/sample-docker-monorepo/webthingy:latest
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+          ports:
+            - containerPort: 8080
