@@ -95,6 +95,7 @@ jobs:
           context: ${{ inputs.context }}
           platforms: ${{ inputs.platforms }}
           labels: |
+            org.opencontainers.image.name=${{ inputs.imageName }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.repositoryUrl }}
       - name: get-digests
