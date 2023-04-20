@@ -83,9 +83,9 @@ jobs:
           TAG="${{ inputs.tag }}"
           TAG="${TAG:-latest}"
           if [ -n "${{ inputs.registryOverride }}" ]; then
-            echo "image-with-tag=${{ inputs.registryOverride }}:$TAG" >> $GITHUB_OUTPUT
+            echo "image-with-tag=${{ inputs.registryOverride }}/${{ inputs.image }}:$TAG" >> $GITHUB_OUTPUT
           else
-            echo "image-with-tag=${GHCR_DOCKER_REPO,,}:$TAG" >> $GITHUB_OUTPUT
+            echo "image-with-tag=${GHCR_DOCKER_REPO,,}/${{ inputs.image }}:$TAG" >> $GITHUB_OUTPUT
           fi
       - name: Build and push
         uses: docker/build-push-action@v4
@@ -108,19 +108,17 @@ jobs:
             echo "${DESTINATION_DIGEST}"
           ) | column -t
           echo "destination=${DESTINATION_DIGEST}" >> $GITHUB_OUTPUT
-      - name: Sign image with a key
+      - name: Sign image
         env:
           COSIGN_YES: "true"
         run: |
           cosign sign ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }} -y
       - uses: anchore/sbom-action@v0
-        if: ${{ steps.determine-type.outputs.typeIsDocker == 'true' }}
         with:
           image: ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}
           artifact-name: sbom-spdx.json
           output-file: /tmp/sbom-spdx.json
       - name: download unsigned sbom
-        if: ${{ steps.determine-type.outputs.typeIsDocker != 'true' }}
         run: |
           cosign download sbom ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }} > /tmp/sbom-spdx.json
       - name: publish sbom blob as blob
