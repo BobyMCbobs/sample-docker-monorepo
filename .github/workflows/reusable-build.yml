@@ -45,7 +45,6 @@ on:
           e.g: linux/amd64,linux/arm64
     outputs:
       images:
-        type: string
         value: ${{ jobs.build.outputs.images }}
 
 jobs:
