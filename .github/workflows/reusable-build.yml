@@ -43,10 +43,16 @@ on:
         description: |
           comma-separated list of platforms to build with.
           e.g: linux/amd64,linux/arm64
+    outputs:
+      images:
+        type: string
+        value: ${{ jobs.build.outputs.images }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      images: ${{ steps.build.outputs.imageid }}
     steps:
       - uses: mikefarah/yq@master
       - uses: actions/setup-go@v4
@@ -89,6 +95,7 @@ jobs:
           fi
       - name: Build and push
         uses: docker/build-push-action@v4
+        id: build
         with:
           push: true
           tags: ${{ steps.run-info.outputs.image-with-tag }}
