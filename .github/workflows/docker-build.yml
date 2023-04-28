@@ -43,9 +43,6 @@ jobs:
       platforms: 'linux/amd64,linux/arm64'
   scan:
     needs: build
-    strategy:
-      matrix:
-        include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-container-image-scan.yml@main
     with:
       imageRefs: ${{ needs.build.outputs.images }}
