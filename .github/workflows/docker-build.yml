@@ -45,8 +45,7 @@ jobs:
   scan:
     needs: build
     strategy:
-      matrix:
-        include: ${{ fromJSON(needs.build.outputs.images) }}
+      matrix: ${{ needs.build.outputs.images }}
     uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-container-image-scan.yml@main
     with:
       imageRefs: ${{ matrix }}
