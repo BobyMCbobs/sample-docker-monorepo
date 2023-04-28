@@ -51,7 +51,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      images: ${{ steps.build.outputs.imageid }}
+      images: ${{ steps.image.outputs.image }}
     steps:
       - uses: mikefarah/yq@master
       - uses: actions/setup-go@v4
@@ -131,7 +131,11 @@ jobs:
           COSIGN_YES: "true"
         run: |
           cosign attest --predicate /tmp/sbom-spdx.json ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}
+      - name: image
+        id: image
+        run: |
+          echo "image=${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}" >> $GITHUB_OUTPUT
       - name: image result
         id: result
         run: |
-          echo "Build, pushed and signed: ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}"
+          echo "Build, pushed and signed: ${{ step.image.outputs.image }}"
