@@ -43,10 +43,10 @@ jobs:
       imageName: ${{ fromJSON(toJSON(matrix)).target }}
       platforms: 'linux/amd64,linux/arm64'
   scan:
-    needs: build
+    needs: [prepare, build]
     strategy:
       matrix:
-        include: [${{ needs.build.outputs.images }}]
+        include: ${{ needs.build.outputs.* }}
     uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-container-image-scan.yml@main
     with:
-      imageRefs: ${{ fromJSON(toJSON(matrix)) }}
+      imageRefs: ${{ fromJSON(toJSON(matrix)).images }}
