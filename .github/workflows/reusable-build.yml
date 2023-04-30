@@ -43,6 +43,12 @@ on:
         description: |
           comma-separated list of platforms to build with.
           e.g: linux/amd64,linux/arm64
+      push:
+        required: false
+        type: boolean
+        default: false
+        description: |
+          set to true to push an image to a registry. When set to false, it will build and exit
     outputs:
       images:
         value: ${{ jobs.build.outputs.images }}
@@ -96,7 +102,7 @@ jobs:
         uses: docker/build-push-action@v4
         id: build
         with:
-          push: true
+          push: ${{ inputs.push }}
           tags: ${{ steps.run-info.outputs.image-with-tag }}
           context: ${{ inputs.context }}
           platforms: ${{ inputs.platforms }}
@@ -107,6 +113,7 @@ jobs:
             org.opencontainers.image.source=${{ github.repositoryUrl }}
       - name: get-digests
         id: get-digests
+        if: ${{ inputs.push }}
         env:
           DESTINATION: ${{ steps.run-info.outputs.image-with-tag }}
         run: |
@@ -117,25 +124,30 @@ jobs:
           ) | column -t
           echo "destination=${DESTINATION_DIGEST}" >> $GITHUB_OUTPUT
       - name: Sign image
+        if: ${{ inputs.push }}
         env:
           COSIGN_YES: "true"
         run: |
           cosign sign ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }} -y
       - uses: anchore/sbom-action@v0
+        if: ${{ inputs.push }}
         with:
           image: ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}
           artifact-name: sbom-spdx.json
           output-file: /tmp/sbom-spdx.json
       - name: publish sbom blob as blob
+        if: ${{ inputs.push }}
         env:
           COSIGN_YES: "true"
         run: |
           cosign attest --predicate /tmp/sbom-spdx.json ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}
       - name: image
+        if: ${{ inputs.push }}
         id: image
         run: |
           echo "image=${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}" >> $GITHUB_OUTPUT
       - name: image result
+        if: ${{ inputs.push }}
         id: result
         run: |
           echo "Build, pushed and signed: ${{ steps.image.outputs.image }}"

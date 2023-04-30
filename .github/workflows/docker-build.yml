@@ -42,11 +42,4 @@ jobs:
       dockerfile: apps/${{ fromJSON(toJSON(matrix)).target }}/Dockerfile
       imageName: ${{ fromJSON(toJSON(matrix)).target }}
       platforms: 'linux/amd64,linux/arm64'
-  scan:
-    needs: [prepare, build]
-    strategy:
-      matrix:
-        include: ${{ needs.build.outputs.* }}
-    uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-container-image-scan.yml@main
-    with:
-      imageRefs: ${{ fromJSON(toJSON(matrix)).images }}
+      push: ${{ github.ref_name == 'main' }}
