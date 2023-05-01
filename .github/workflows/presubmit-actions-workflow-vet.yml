@@ -37,7 +37,8 @@ jobs:
             ##### The following actions require updating\n`
             const invalid = JSON.parse(`${{ steps.actions-without-digest.outputs.invalid }}`)
             invalid.forEach(i => {
-              output += `${i.file}\n`
+             // https://github.com/BobyMCbobs/sample-docker-monorepo/blob/main/.github/workflows/docker-build.yml
+              output += `[${i.file}](${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/${i.file})\n`
               i.invalid.forEach(v => {
                 output += `- ${v}\n`
               })
@@ -45,7 +46,7 @@ jobs:
             })
 
             output += `\n`
-            output += `**Actions are required to be used like \`_actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222_\` instead of a version tag**\n`
+            output += `**Actions are required to be used like _\`actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222\`_ instead of a version tag**\n`
 
             output += `*Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*
             <!-- from ${{ github.workflow_ref }} -->
