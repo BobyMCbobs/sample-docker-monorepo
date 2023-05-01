@@ -41,6 +41,7 @@ jobs:
               i.invalid.forEach(v => {
                 output += `- ${v}\n`
               })
+              output += `\n`
             })
 
             output += `*Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*
