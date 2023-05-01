@@ -38,7 +38,7 @@ jobs:
             const invalid = JSON.parse(`${{ steps.actions-without-digest.outputs.invalid }}`)
             invalid.forEach(i => {
              // https://github.com/BobyMCbobs/sample-docker-monorepo/blob/main/.github/workflows/docker-build.yml
-              output += `[${i.file}](${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/${i.file})\n`
+              output += `[${i.file}](${{ github.server_url }}/${{ github.repository }}/blob/main/${i.file})\n`
               i.invalid.forEach(v => {
                 output += `- ${v}\n`
               })
