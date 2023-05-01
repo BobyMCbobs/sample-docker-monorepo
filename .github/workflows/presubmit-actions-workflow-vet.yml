@@ -1,0 +1,54 @@
+name: Presubmit Actions workflow vet
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  presubmit-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: mikefarah/yq@bbe305500687a5fe8498d74883c17f0f06431ac4
+      - id: actions-without-digest
+        run: |
+          INVALID=$(
+            for WORKFLOW in $(find .github/workflows -type f -name '*.yml'); do
+              ACTIONS=$(< $WORKFLOW                 yq e '.jobs.*.steps[].uses as $jobsteps | .jobs.*.uses as $jobuses | $jobsteps | select(test("([a-zA-Z0-9-]+/)([a-zA-Z0-9-]+)(/[a-zA-Z0-9-]+)?@([a-z0-9]{40})") != true) | [., $jobuses]' -o json | jq -rcMs --arg file "$WORKFLOW" '{"invalid": . | flatten} | .file = $file')
+              [ -z "${ACTIONS}" ] && continue
+              echo -e "${ACTIONS}"
+            done | jq -sc '.'
+          )
+          echo "invalid=$INVALID" >> $GITHUB_OUTPUT
+      - name: display invalid
+        run: |
+          echo -e '${{ steps.actions-without-digest.outputs.invalid }}' | yq e -P
+      - name: Update Pull Request
+        uses: actions/github-script@v6
+        if: ${{ github.event_name == 'pull_request' && steps.actions-without-digest.outputs.invalid != null }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            let output = `#### Actions presubmit\n\n
+            Actions must be used with the commit digest\n\n
+
+            ##### The following actions require updating\n`
+
+            thing.forEach(i => {
+              output += `${i.file}\n`
+              i.invalid.forEach(v => {
+                output += `- ${v}`
+              })
+            })
+
+            output += `*Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*
+            <!-- from ${{ github.action_path }} -->
+            `;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
