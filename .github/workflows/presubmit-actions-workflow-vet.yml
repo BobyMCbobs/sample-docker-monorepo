@@ -45,10 +45,10 @@ jobs:
             })
 
             output += `\n`
-            output += `**Actions are required to be used like _actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222_**\n`
+            output += `**Actions are required to be used like \`_actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222_\` instead of a version tag**\n`
 
             output += `*Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*
-            <!-- from ${{ github.action_path }} -->
+            <!-- from ${{ github.workflow_ref }} -->
             `;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
