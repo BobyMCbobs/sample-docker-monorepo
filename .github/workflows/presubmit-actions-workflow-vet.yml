@@ -35,8 +35,8 @@ jobs:
             Actions must be used with the commit digest\n\n
 
             ##### The following actions require updating\n`
-
-            thing.forEach(i => {
+            const invalid = `${{ steps.actions-without-digest.outputs.invalid }}`
+            invalid.forEach(i => {
               output += `${i.file}\n`
               i.invalid.forEach(v => {
                 output += `- ${v}`
