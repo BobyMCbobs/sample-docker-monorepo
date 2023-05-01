@@ -39,7 +39,7 @@ jobs:
             invalid.forEach(i => {
               output += `${i.file}\n`
               i.invalid.forEach(v => {
-                output += `- ${v}`
+                output += `- ${v}\n`
               })
             })
 
