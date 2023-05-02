@@ -33,7 +33,7 @@ jobs:
           echo -e '${{ steps.actions-per-workflow.outputs.actions }}' | yq e -P
       - name: Update Pull Request
         uses: actions/github-script@v6
-        if: ${{ github.event_name == 'pull_request' && steps.actions-without-digest.outputs.result != null }}
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
