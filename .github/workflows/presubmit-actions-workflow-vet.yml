@@ -38,7 +38,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const re = /([a-zA-Z0-9-]+\/)([a-zA-Z0-9-]+)(\/[a-zA-Z0-9-]+)?@([a-z0-9]{40})/
-            const invalid = JSON.parse(`${{ steps.actions-per-workflow.outputs.actions }}`).map(i => {
+            const invalidActions = JSON.parse(`${{ steps.actions-per-workflow.outputs.actions }}`).map(i => {
               return i.invalid.filter(v => {
                 return !(re.test(v) || v.includes("${{ github.repository }}"))
               })
@@ -47,7 +47,7 @@ jobs:
             Actions must be used with the commit digest\n\n
 
             ##### The following actions require updating\n`
-            invalid.forEach(i => {
+            invalidActions.forEach(i => {
              // https://github.com/BobyMCbobs/sample-docker-monorepo/blob/main/.github/workflows/docker-build.yml
               output += `[${i.file}](${{ github.server_url }}/${{ github.repository }}/blob/main/${i.file})\n`
               i.invalid.forEach(v => {
