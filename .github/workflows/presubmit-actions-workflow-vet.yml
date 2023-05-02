@@ -39,9 +39,10 @@ jobs:
           script: |
             const re = /([a-zA-Z0-9-]+\/)([a-zA-Z0-9-]+)(\/[a-zA-Z0-9-]+)?@([a-z0-9]{40})/
             const invalidActions = JSON.parse(`${{ steps.actions-per-workflow.outputs.actions }}`).map(i => {
-              return i.invalid.filter(v => {
-                return !(re.test(v) || v.includes("${{ github.repository }}"))
+              i.invalid = i.invalid.filter(v => {
+                return !(re.test(v) || v.includes("BobyMCbobs/sample-docker-monorepo"))
               })
+              return i
             })
             let output = `#### Actions presubmit\n\n
             Actions must be used with the commit digest\n\n
