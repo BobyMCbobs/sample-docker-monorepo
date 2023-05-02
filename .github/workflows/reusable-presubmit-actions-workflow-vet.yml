@@ -35,10 +35,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const re = /([a-zA-Z0-9-]+\/)([a-zA-Z0-9-]+)(\/[a-zA-Z0-9-]+)?@([a-z0-9]{40})/
-            const invalidActions = JSON.parse(`${{ steps.actions-per-workflow.outputs.actions }}`).map(i => {
+            const invalidActions = JSON.parse(`${{ steps.actions-per-workflow.outputs.actions }}`).filter(i => {
               i.invalid = i.invalid.filter(v => {
                 return !(re.test(v) || v.includes("BobyMCbobs/sample-docker-monorepo"))
               })
+              if (i.invalid.length === 0) {
+                return
+              }
               return i
             })
             let output = `#### Actions presubmit\n\n
