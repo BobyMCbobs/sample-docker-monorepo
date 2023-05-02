@@ -40,11 +40,11 @@ jobs:
 
             default_branch="$(gh api repos/$org/$repo --jq .default_branch)"
             latest_commit_hash="$(gh api repos/$org/$repo/commits/$default_branch --jq '.sha')"
-            latest_release_tag_name="$(gh api repos/$org/$repo/releases/latest --jq '.[0].tag_name' || true)"
-            latest_release_commit_hash="$(gh api repos/$org/$repo/git/ref/tags/$latest_release_tag_name --jq .object.sha || true)"
+            latest_release_tag_name="$(gh api repos/$org/$repo/releases/latest --jq '.tag_name' 2>/dev/null || echo '')"
+            latest_release_commit_hash="$(gh api repos/$org/$repo/git/ref/tags/$latest_release_tag_name --jq .object.sha 2>/dev/null || echo '')"
 
             commit_hash=
-            if [ -n "$latest_release_commit_hash" ]; then
+            if [ -n "$latest_release_commit_hash" ] && [ ! "$(echo $latest_release_commit_hash | jq .message)" = "Not Found" ]; then
               commit_hash="$latest_release_commit_hash"
             else
               commit_hash="$latest_commit_hash"
