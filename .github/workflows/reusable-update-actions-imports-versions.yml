@@ -39,9 +39,9 @@ jobs:
             echo "$file: $action; $org/$repo"
 
             default_branch="$(gh api repos/$org/$repo --jq .default_branch)"
-            latest_commit_hash="$(gh api repos/$org/$repo/commits/master --jq '.sha')"
+            latest_commit_hash="$(gh api repos/$org/$repo/commits/$default_branch --jq '.sha')"
             latest_release_tag_name="$(gh api repos/$org/$repo/releases/latest --jq '.[0].tag_name' || true)"
-            latest_release_commit_hash="$(gh api repos/$org/$repo/git/ref/tags/$latest_release_tag_name --jq .object.sha)"
+            latest_release_commit_hash="$(gh api repos/$org/$repo/git/ref/tags/$latest_release_tag_name --jq .object.sha || true)"
 
             commit_hash=
             if [ -n "$latest_release_commit_hash" ]; then
