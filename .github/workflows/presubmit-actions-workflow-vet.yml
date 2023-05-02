@@ -31,28 +31,22 @@ jobs:
       - name: display actions
         run: |
           echo -e '${{ steps.actions-per-workflow.outputs.actions }}' | yq e -P
-      - id: actions-without-digest
-        uses: actions/github-script@v6
-        with:
-          script: |
-            // match on actions without commit digest
-            const re = /([a-zA-Z0-9-]+\/)([a-zA-Z0-9-]+)(\/[a-zA-Z0-9-]+)?@([a-z0-9]{40})/
-            return JSON.parse(`${{ steps.actions-per-workflow.outputs.actions }}`).map(i => {
-              return i.invalid.filter(v => {
-                return !(re.test(v) || v.includes("${{ github.repository }}"))
-              })
-            })
       - name: Update Pull Request
         uses: actions/github-script@v6
         if: ${{ github.event_name == 'pull_request' && steps.actions-without-digest.outputs.result != null }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const re = /([a-zA-Z0-9-]+\/)([a-zA-Z0-9-]+)(\/[a-zA-Z0-9-]+)?@([a-z0-9]{40})/
+            const invalid = JSON.parse(`${{ steps.actions-per-workflow.outputs.actions }}`).map(i => {
+              return i.invalid.filter(v => {
+                return !(re.test(v) || v.includes("${{ github.repository }}"))
+              })
+            })
             let output = `#### Actions presubmit\n\n
             Actions must be used with the commit digest\n\n
 
             ##### The following actions require updating\n`
-            const invalid = JSON.parse(`${{ steps.actions-without-digest.outputs.result }}`)
             invalid.forEach(i => {
              // https://github.com/BobyMCbobs/sample-docker-monorepo/blob/main/.github/workflows/docker-build.yml
               output += `[${i.file}](${{ github.server_url }}/${{ github.repository }}/blob/main/${i.file})\n`
