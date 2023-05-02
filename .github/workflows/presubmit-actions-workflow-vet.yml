@@ -8,4 +8,4 @@ on:
 
 jobs:
   presubmit-workflow:
-    uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-presubmit-actions-workflow-vet.yml@main
+    uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-presubmit-actions-workflow-require-commit-digest-vet.yml@main
