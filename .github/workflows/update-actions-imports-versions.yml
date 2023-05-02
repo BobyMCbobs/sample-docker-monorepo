@@ -1,0 +1,12 @@
+name: update actions imports versions
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-update-actions-imports-versions.yml@main
