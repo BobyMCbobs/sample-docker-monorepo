@@ -27,6 +27,8 @@ jobs:
         run: |
           echo -e '${{ steps.actions-per-workflow.outputs.actions }}' | yq e -P
       - name: iterate through each file's actions and update them
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           for LINE in $(echo '${{ steps.actions-per-workflow.outputs.actions }}' | jq --arg REPOSITORY '${{ github.repository }}' -rcM '.[] | .file as $file | .actions[] | split("@") | .[0] as $action | $action | split("/") | .[0] as $org | .[1] as $repo | {"file": $file, "action": $action, "org": $org, "repo": $repo} | select(.action | contains($REPOSITORY) == false)'); do
             file="$(echo $LINE | jq -rcM .file)"
