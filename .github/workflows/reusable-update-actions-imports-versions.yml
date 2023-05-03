@@ -19,7 +19,7 @@ jobs:
       - id: actions-per-workflow
         run: |
           ACTIONS=$(
-            for WORKFLOW in $(find .github/workflows -type f -name '*.yml'); do
+            for WORKFLOW in $(find .github/workflows -type f -name '*.yml' | sort | uniq); do
               ACTIONS=$(< $WORKFLOW \
                 yq e '.jobs.*.steps[].uses as $jobsteps | .jobs.*.uses as $jobuses | $jobsteps | [., $jobuses]' -o json \
                   | jq -rcMs --arg file "$WORKFLOW" '{"actions": . | flatten} | .file = $file')
@@ -34,9 +34,11 @@ jobs:
       - name: iterate through each file's actions and update them
         env:
           GH_TOKEN: ${{ github.token }}
+          ACTIONS: ${{ steps.actions-per-workflow.outputs.actions }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           CACHE="{}"
-          for LINE in $(echo '${{ steps.actions-per-workflow.outputs.actions }}' | jq --arg REPOSITORY '${{ github.repository }}' -rcM '.[] | .file as $file | .actions[] | . as $action_in_workflow | split("@") | .[0] as $action | $action | split("/") | .[0] as $org | .[1] as $repo | {"file": $file, "action": $action, "org": $org, "repo": $repo, "action_in_workflow": $action_in_workflow} | select(.action | contains($REPOSITORY) == false)'); do
+          for LINE in $(echo "$ACTIONS" | jq --arg REPOSITORY "$REPOSITORY" -rcM '.[] | .file as $file | .actions[] | . as $action_in_workflow | split("@") | .[0] as $action | $action | split("/") | .[0] as $org | .[1] as $repo | {"file": $file, "action": $action, "org": $org, "repo": $repo, "action_in_workflow": $action_in_workflow} | select(.action | contains($REPOSITORY) == false)'); do
             file="$(echo $LINE | jq -rcM .file)"
             action="$(echo $LINE | jq -rcM .action)"
             org="$(echo $LINE | jq -rcM .org)"
@@ -58,11 +60,17 @@ jobs:
               default_branch="$(gh api repos/$org/$repo --jq .default_branch)"
               latest_commit_hash="$(gh api repos/$org/$repo/commits/$default_branch --jq '.sha')"
               latest_release_tag_name="$(gh api repos/$org/$repo/releases/latest --jq '.tag_name' 2>/dev/null || echo '')"
+              if [ "$(echo $latest_release_tag_name | jq -r .message)" = "Not Found" ]; then
+                latest_release_tag_name=false
+              fi
               latest_release_commit_hash="$(gh api repos/$org/$repo/git/ref/tags/$latest_release_tag_name --jq .object.sha 2>/dev/null || echo '')"
+              if [ "$(echo $latest_release_commit_hash | jq -r .message)" = "Not Found" ]; then
+                latest_release_commit_hash=false
+              fi
             fi
 
             commit_hash=
-            if [ -n "$latest_release_commit_hash" ] && [ ! "$(echo $latest_release_commit_hash | jq .message)" = "Not Found" ]; then
+            if [ -n "$latest_release_commit_hash" ] && [ ! "$latest_release_commit_hash" = false ]; then
               commit_hash="$latest_release_commit_hash"
             else
               commit_hash="$latest_commit_hash"
@@ -86,8 +94,8 @@ jobs:
                 '.[$repo] = {"default_branch": $default_branch, "latest_commit_hash": $latest_commit_hash, "latest_release_tag_name": $latest_release_tag_name, "latest_release_commit_hash": $latest_release_commit_hash}' \
             )"
 
-            FROM="$action_in_workflow" TO="$action@$commit_hash # $latest_release_tag_name" \
-              yq e -i '. as $yml | .jobs | keys | .[] as $job | $yml | with(.jobs[$job].steps[] | select(.uses == env(FROM)); .uses = env(TO))' .github/workflows/reusable-container-image-scan.yml
+            export FROM="$action_in_workflow" TO="$action@$commit_hash # $latest_release_tag_name"
+            yq e -i '. as $yml | .jobs | keys | .[] as $job | $yml | with(.jobs[$job].steps[] | select(.uses == env(FROM)); .uses = env(TO))' .github/workflows/reusable-container-image-scan.yml
 
           done
           git diff
