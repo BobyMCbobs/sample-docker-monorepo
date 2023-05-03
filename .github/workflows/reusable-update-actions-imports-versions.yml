@@ -6,6 +6,7 @@ on:
 jobs:
   presubmit-workflow:
     runs-on: ubuntu-latest
+    timeout-minutes: 600
     steps:
       - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
       - name: configure system
