@@ -53,6 +53,7 @@ jobs:
               latest_release_tag_name="$(echo $CACHE_FOR_LINE | jq -rcM .latest_release_tag_name)"
               latest_release_commit_hash="$(echo $CACHE_FOR_LINE | jq -rcM .latest_release_commit_hash)"
               CACHE_HIT=true
+              echo "Using cached values for '$org/$repo'"
             else
               default_branch="$(gh api repos/$org/$repo --jq .default_branch)"
               latest_commit_hash="$(gh api repos/$org/$repo/commits/$default_branch --jq '.sha')"
