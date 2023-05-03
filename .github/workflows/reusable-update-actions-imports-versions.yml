@@ -8,6 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
+      - name: configure system
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          gh auth login --with-token < <(echo ${{ secrets.GITHUB_TOKEN }})
+          gh auth status
       - uses: mikefarah/yq@bbe305500687a5fe8498d74883c17f0f06431ac4
       - id: actions-per-workflow
         run: |
@@ -61,14 +67,36 @@ jobs:
             FROM="$action_in_workflow" TO="$action@$commit_hash # $latest_release_tag_name" \
             yq e -i '. as $yml | .jobs | keys | .[] as $job | $yml | with(.jobs[$job].steps[] | select(.uses == env(FROM)); .uses = env(TO))' .github/workflows/reusable-container-image-scan.yml
 
-            git diff
           done
-      # 1. get latest release
-      #   1a. get tag of release, returning commit hash
-      # 2. if no latest release,
-      #    determine main branch name and
-      #    return latest commit on the $MAIN branch
-      # NOTE:
-      # when editing, use yq like this to persist a comment, for human readable version info
-      # $ THING='a # comment' yq e -n '.a = env(THING)'
-      #   a: a # comment
+          git diff
+      - name: determine changes
+        id: determine-changes
+        run: |
+          if git diff --name-only --diff-filter=ACMRT | grep .github/workflows; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+      - name: determine if there is an existing PR
+        id: existing-pr
+        if: ${{ steps.determine-changes.outputs.changes == 'true' }}
+        run: |
+          EXISTING_PR="$(gh pr list --json title,labels,body --jq '.' --label update-actions-versions --search "Update Actions versions" | jq -r .[].title)"
+          if [ "${EXISTING_PR}" = "Update Actions versions" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+      - name: create PR
+        if: ${{ steps.determine-changes.outputs.changes == 'true' && steps.existing-pr.outputs.exists != 'true' }}
+        id: create-pr
+        run: |
+          TIMESTAMP="$(date +%Y-%m-%d-%H-%M)"
+          NEW_BRANCH="update-actions-versions--${TIMESTAMP}"
+          echo "new-branch=$NEW_BRANCH" >> $GITHUB_OUTPUT
+          git add ${{ inputs.modfile }}
+          git branch "${NEW_BRANCH}"
+          git checkout "${NEW_BRANCH}"
+          git commit -s -m "update Actions versions: $TIMESTAMP"
+          git push origin "${NEW_BRANCH}"
+          gh pr create --title "Update Actions versions: $TIMESTAMP" --body "Updates versions of Actions: $TIMESTAMP" --label update-actions-versions
+      - name: merge PR
+        if: ${{ inputs.autoMerge && steps.determine-changes.outputs.changes == 'true' && steps.existing-pr.outputs.exists != 'true' }}
+        run: |
+          gh pr merge --merge --auto ${{ steps.create-pr.outputs.new-branch }}
