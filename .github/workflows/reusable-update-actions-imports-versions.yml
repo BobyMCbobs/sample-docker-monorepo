@@ -1,21 +1,19 @@
 name: reusable update actions imports versions
-
 on:
   workflow_call: {}
-
 jobs:
   presubmit-workflow:
     runs-on: ubuntu-latest
     timeout-minutes: 600
     steps:
-      - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: configure system
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           gh auth login --with-token < <(echo ${{ secrets.GITHUB_TOKEN }})
           gh auth status
-      - uses: mikefarah/yq@bbe305500687a5fe8498d74883c17f0f06431ac4
+      - uses: mikefarah/yq@d2f1ae9db722ac6b0702dd7f8a08dd22722d8c2d # v4.33.3
       - id: actions-per-workflow
         run: |
           ACTIONS=$(

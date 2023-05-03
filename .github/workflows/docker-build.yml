@@ -1,36 +1,31 @@
 name: build
-
 on:
   push: {}
   release:
     types: [published]
   workflow_dispatch: {}
-
 permissions:
   packages: write
   contents: write
   pull-requests: write
   id-token: write
   security-events: write
-
 env:
   FOLDER: apps
-
 jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: mikefarah/yq@master
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: mikefarah/yq@d2f1ae9db722ac6b0702dd7f8a08dd22722d8c2d # v4.33.3
       - id: set
         run: |
           echo "matrix=$(find $FOLDER -mindepth 1 -maxdepth 1 -type d | xargs -n 1 basename | xargs | yq 'split(" ")|.[]|{"target":.}' -ojson | jq -rcM -s .)" >> $GITHUB_OUTPUT
       - name: check output
         run: |
           jq . <<< '${{ steps.prepare.outputs.matrix }}'
-
   build:
     needs: prepare
     strategy:
