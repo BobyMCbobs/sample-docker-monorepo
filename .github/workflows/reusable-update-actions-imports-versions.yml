@@ -17,8 +17,6 @@ jobs:
       - uses: mikefarah/yq@bbe305500687a5fe8498d74883c17f0f06431ac4
       - id: actions-per-workflow
         run: |
-          # steps
-          # 1. get jobs from uses fields
           ACTIONS=$(
             for WORKFLOW in $(find .github/workflows -type f -name '*.yml'); do
               ACTIONS=$(< $WORKFLOW \
@@ -36,6 +34,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          CACHE="{}"
           for LINE in $(echo '${{ steps.actions-per-workflow.outputs.actions }}' | jq --arg REPOSITORY '${{ github.repository }}' -rcM '.[] | .file as $file | .actions[] | . as $action_in_workflow | split("@") | .[0] as $action | $action | split("/") | .[0] as $org | .[1] as $repo | {"file": $file, "action": $action, "org": $org, "repo": $repo, "action_in_workflow": $action_in_workflow} | select(.action | contains($REPOSITORY) == false)'); do
             file="$(echo $LINE | jq -rcM .file)"
             action="$(echo $LINE | jq -rcM .action)"
@@ -45,10 +44,20 @@ jobs:
 
             echo "$file: $action; $org/$repo"
 
-            default_branch="$(gh api repos/$org/$repo --jq .default_branch)"
-            latest_commit_hash="$(gh api repos/$org/$repo/commits/$default_branch --jq '.sha')"
-            latest_release_tag_name="$(gh api repos/$org/$repo/releases/latest --jq '.tag_name' 2>/dev/null || echo '')"
-            latest_release_commit_hash="$(gh api repos/$org/$repo/git/ref/tags/$latest_release_tag_name --jq .object.sha 2>/dev/null || echo '')"
+            CACHE_HIT=false
+            CACHE_FOR_LINE="$(echo $CACHE | jq -rcM --arg repo "$org/$repo" '.[$repo]')"
+            if [ -n "$CACHE_FOR_LINE" ]; then
+              default_branch="$(echo $CACHE_FOR_LINE | jq -rcM .default_branch)"
+              latest_commit_hash="$(echo $CACHE_FOR_LINE | jq -rcM .latest_commit_hash)"
+              latest_release_tag_name="$(echo $CACHE_FOR_LINE | jq -rcM .latest_release_tag_name)"
+              latest_release_commit_hash="$(echo $CACHE_FOR_LINE | jq -rcM .latest_release_commit_hash)"
+              CACHE_HIT=true
+            else
+              default_branch="$(gh api repos/$org/$repo --jq .default_branch)"
+              latest_commit_hash="$(gh api repos/$org/$repo/commits/$default_branch --jq '.sha')"
+              latest_release_tag_name="$(gh api repos/$org/$repo/releases/latest --jq '.tag_name' 2>/dev/null || echo '')"
+              latest_release_commit_hash="$(gh api repos/$org/$repo/git/ref/tags/$latest_release_tag_name --jq .object.sha 2>/dev/null || echo '')"
+            fi
 
             commit_hash=
             if [ -n "$latest_release_commit_hash" ] && [ ! "$(echo $latest_release_commit_hash | jq .message)" = "Not Found" ]; then
@@ -64,8 +73,19 @@ jobs:
               latest_release_tag_name="$default_branch"
             fi
 
+            [ ! "$CACHE_HIT" = true ] && \
+            CACHE="$(echo $CACHE \
+              | jq -rcM \
+                --arg repo "$org/$repo" \
+                --arg default_branch $default_branch \
+                --arg latest_commit_hash $latest_commit_hash \
+                --arg latest_release_tag_name $latest_release_tag_name \
+                --arg latest_release_commit_hash $latest_release_commit_hash \
+                '.[$repo] = {"default_branch": $default_branch, "latest_commit_hash": $latest_commit_hash, "latest_release_tag_name": $latest_release_tag_name, "latest_release_commit_hash": $latest_release_commit_hash}' \
+            )"
+
             FROM="$action_in_workflow" TO="$action@$commit_hash # $latest_release_tag_name" \
-            yq e -i '. as $yml | .jobs | keys | .[] as $job | $yml | with(.jobs[$job].steps[] | select(.uses == env(FROM)); .uses = env(TO))' .github/workflows/reusable-container-image-scan.yml
+              yq e -i '. as $yml | .jobs | keys | .[] as $job | $yml | with(.jobs[$job].steps[] | select(.uses == env(FROM)); .uses = env(TO))' .github/workflows/reusable-container-image-scan.yml
 
           done
           git diff
