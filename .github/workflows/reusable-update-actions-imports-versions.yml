@@ -50,10 +50,17 @@ jobs:
               commit_hash="$latest_commit_hash"
             fi
 
-            echo "$file: $action; $org/$repo@$commit_hash"
+            printf "$file: $action@$commit_hash"
+            if [ -n "$latest_release_tag_name" ]; then
+              echo " # $latest_release_tag_name"
+            fi
           done
       # 1. get latest release
       #   1a. get tag of release, returning commit hash
       # 2. if no latest release,
       #    determine main branch name and
       #    return latest commit on the $MAIN branch
+      # NOTE:
+      # when editing, use yq like this to persist a comment, for human readable version info
+      # $ THING='a # comment' yq e -n '.a = env(THING)'
+      #   a: a # comment
