@@ -35,7 +35,7 @@ jobs:
             action="$(echo $LINE | jq -rcM .action)"
             org="$(echo $LINE | jq -rcM .org)"
             repo="$(echo $LINE | jq -rcM .repo)"
-            action_in_workflow="$(echo $LINE | jq -rcM .action_in_workflow)
+            action_in_workflow="$(echo $LINE | jq -rcM .action_in_workflow)"
 
             echo "$file: $action; $org/$repo"
 
@@ -51,7 +51,7 @@ jobs:
               commit_hash="$latest_commit_hash"
             fi
 
-            printf "$file: $action@$commit_hash $action_in_workflow"
+            printf "$file: $action@$commit_hash (from $action_in_workflow)"
             if [ -n "$latest_release_tag_name" ]; then
               echo " # $latest_release_tag_name"
             fi
