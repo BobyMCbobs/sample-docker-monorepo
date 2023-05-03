@@ -54,7 +54,14 @@ jobs:
             printf "$file: $action@$commit_hash (from $action_in_workflow)"
             if [ -n "$latest_release_tag_name" ]; then
               echo " # $latest_release_tag_name"
+            else
+              latest_release_tag_name="$default_branch"
             fi
+
+            FROM="$action_in_workflow" TO="$action@$commit_hash # $latest_release_tag_name" \
+            yq e -i '. as $yml | .jobs | keys | .[] as $job | $yml | with(.jobs[$job].steps[] | select(.uses == env(FROM)); .uses = env(TO))' .github/workflows/reusable-container-image-scan.yml
+
+            git diff
           done
       # 1. get latest release
       #   1a. get tag of release, returning commit hash
