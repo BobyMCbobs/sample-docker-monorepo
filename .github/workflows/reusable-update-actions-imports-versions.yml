@@ -46,7 +46,7 @@ jobs:
 
             CACHE_HIT=false
             CACHE_FOR_LINE="$(echo $CACHE | jq -rcM --arg repo "$org/$repo" '.[$repo]')"
-            if [ -n "$CACHE_FOR_LINE" ]; then
+            if [ -n "$CACHE_FOR_LINE" ] && [ ! "$CACHE_FOR_LINE" = "null" ]; then
               default_branch="$(echo $CACHE_FOR_LINE | jq -rcM .default_branch)"
               latest_commit_hash="$(echo $CACHE_FOR_LINE | jq -rcM .latest_commit_hash)"
               latest_release_tag_name="$(echo $CACHE_FOR_LINE | jq -rcM .latest_release_tag_name)"
