@@ -11,13 +11,13 @@ jobs:
         run: |
           # steps
           # 1. get jobs from uses fields
-          # 2. format as {"invalid":[], "file":""}
+          # 2. format as {"actions":[], "file":""}
           REPOSITORY="${{ github.repository }}"
           ACTIONS=$(
             for WORKFLOW in $(find .github/workflows -type f -name '*.yml'); do
               ACTIONS=$(< $WORKFLOW \
                 yq e '.jobs.*.steps[].uses as $jobsteps | .jobs.*.uses as $jobuses | $jobsteps | [., $jobuses]' -o json \
-                  | jq -rcMs --arg file "$WORKFLOW" --arg repository "$REPOSITORY" '{"invalid": . | flatten} | .file = $file')
+                  | jq -rcMs --arg file "$WORKFLOW" --arg repository "$REPOSITORY" '{"actions": . | flatten} | .file = $file')
               [ -z "${ACTIONS}" ] && continue
               echo -e "${ACTIONS}"
             done | jq -sc '.'
@@ -34,10 +34,10 @@ jobs:
           script: |
             const re = /([a-zA-Z0-9-]+\/)([a-zA-Z0-9-]+)(\/[a-zA-Z0-9-]+)?@([a-z0-9]{40})/
             const invalidActions = JSON.parse(`${{ steps.actions-per-workflow.outputs.actions }}`).filter(i => {
-              i.invalid = i.invalid.filter(v => {
+              i.actions = i.actions.filter(v => {
                 return !(re.test(v) || v.includes(`${{ github.repository }}`))
               })
-              if (i.invalid.length === 0) {
+              if (i.actions.length === 0) {
                 return
               }
               return i
