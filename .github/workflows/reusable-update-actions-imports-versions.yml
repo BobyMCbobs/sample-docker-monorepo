@@ -4,7 +4,6 @@ on:
 jobs:
   presubmit-workflow:
     runs-on: ubuntu-latest
-    timeout-minutes: 600
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: configure system
@@ -47,11 +46,11 @@ jobs:
             default_branch="$(gh api repos/$org/$repo --jq .default_branch)"
             latest_commit_hash="$(gh api repos/$org/$repo/commits/$default_branch --jq '.sha')"
             latest_release_tag_name="$(gh api repos/$org/$repo/releases/latest --jq '.tag_name' 2>/dev/null || echo '')"
-            if [ "$(echo $latest_release_tag_name | jq -r .message)" = "Not Found" ] || [ "$(echo $latest_release_tag_name | jq -r .message)" = "" ]; then
+            if [ "$(echo $latest_release_tag_name | jq -r .message)" = "Not Found" ]; then
                 latest_release_tag_name=false
             fi
             latest_release_commit_hash="$(gh api repos/$org/$repo/git/ref/tags/$latest_release_tag_name --jq .object.sha 2>/dev/null || echo '')"
-            if [ "$(echo $latest_release_commit_hash | jq -r .message)" = "Not Found" ] || [ "$(echo $latest_release_commit_hash | jq -r .message)" = "" ]; then
+            if [ "$(echo $latest_release_commit_hash | jq -r .message)" = "Not Found" ]; then
                 latest_release_commit_hash=false
             fi
 
