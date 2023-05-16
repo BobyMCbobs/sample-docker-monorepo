@@ -30,6 +30,7 @@ jobs:
           echo -e "$STDOUT"
           STDOUT="${STDOUT//$'\n'/'%0A'}"
           echo "stdout=$STDOUT" >> $GITHUB_OUTPUT
+          [ -z "$STDOUT" ] || exit 1
       - name: print stuff
         run: |
           echo "${{ github.event_name }}"
