@@ -24,8 +24,7 @@ jobs:
         env:
           ARGS: --external-sources --exclude=2230 --color=auto ${{ steps.run-info.outputs.scripts }}
         run: |
-          TMP="$(mktemp)"
-          STDOUT="$(docker run -it --rm --workdir /github/workspace -v "$PWD:/github/workspace" docker.io/koalaman/shellcheck-alpine:v0.9.0 $ARGS 2>&1)"
+          STDOUT="$(docker run -it --rm --workdir /github/workspace -v "$PWD:/github/workspace" --entrypoint shellcheck docker.io/koalaman/shellcheck-alpine:v0.9.0 $ARGS 2>&1)"
           echo -e "$STDOUT"
           echo "stdout=$STDOUT" >> $GITHUB_OUTPUT
       - name: print stuff
