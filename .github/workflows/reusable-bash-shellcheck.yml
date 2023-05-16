@@ -1,3 +1,6 @@
+# helpful wiki
+# link: https://www.shellcheck.net/wiki/
+
 name: reusable bash shellcheck
 on:
   workflow_call: {}
@@ -18,7 +21,12 @@ jobs:
       - id: shellcheck
         if: ${{ steps.run-info.outputs.scripts }}
         continue-on-error: true
-        uses: docker://docker.io/koalaman/shellcheck-alpine:v0.9.0
+        run: |
+          TMP="$(mktemp)"
+          STDOUT="$(docker run -it --rm --workdir /github/workspace -v "$PWD:/github/workspace" docker.io/koalaman/shellcheck-alpine:v0.9.0 2> "$TMP")"
+          STDERR="$(< "$TMP")"
+          echo "stdout=$STDOUT" >> $GITHUB_OUTPUT
+          echo "stderr=$STDERR" >> $GITHUB_OUTPUT
         with:
           args: shellcheck --external-sources --exclude=2230 --color=auto ${{ steps.run-info.outputs.scripts }}
       - name: print stuff
@@ -37,7 +45,6 @@ jobs:
             const output = `#### Shellcheck results
             <details><summary>Show results</summary>
             \`\`\`\
-
             ${process.env.RESULT}
             \`\`\`
             </details>
@@ -50,3 +57,6 @@ jobs:
               repo: context.repo.repo,
               body: output
             })
+      - name: shellcheck status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
