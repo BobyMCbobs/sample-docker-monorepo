@@ -25,12 +25,13 @@ jobs:
           TMP="$(mktemp)"
           STDOUT="$(docker run -it --rm --workdir /github/workspace -v "$PWD:/github/workspace" docker.io/koalaman/shellcheck-alpine:v0.9.0 2> "$TMP")"
           STDERR="$(< "$TMP")"
+          echo -e "$STDOUT"
           echo "stdout=$STDOUT" >> $GITHUB_OUTPUT
           echo "stderr=$STDERR" >> $GITHUB_OUTPUT
       - name: print stuff
         run: |
           echo "${{ github.event_name }}"
-          echo "${{ steps.shellcheck.outputs.stdout }}"
+          echo "${{ steps.shellcheck.outputs.stderr }}"
           echo "${{ steps.shellcheck.outcome }}"
       - name: add comment on pull request
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
