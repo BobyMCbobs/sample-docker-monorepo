@@ -28,6 +28,7 @@ jobs:
           docker pull "$IMAGE"
           STDOUT="$(docker run --rm --workdir /github/workspace -v "$PWD:/github/workspace" --entrypoint shellcheck $IMAGE $ARGS 2>&1 || true)"
           echo -e "$STDOUT"
+          STDOUT="${STDOUT//$'\n'/'%0A'}"
           echo "stdout=$STDOUT" >> $GITHUB_OUTPUT
       - name: print stuff
         run: |
