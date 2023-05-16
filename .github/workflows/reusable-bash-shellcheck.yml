@@ -27,8 +27,6 @@ jobs:
           STDERR="$(< "$TMP")"
           echo "stdout=$STDOUT" >> $GITHUB_OUTPUT
           echo "stderr=$STDERR" >> $GITHUB_OUTPUT
-        with:
-          args: shellcheck --external-sources --exclude=2230 --color=auto ${{ steps.run-info.outputs.scripts }}
       - name: print stuff
         run: |
           echo "${{ github.event_name }}"
