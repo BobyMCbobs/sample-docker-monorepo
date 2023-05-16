@@ -21,9 +21,11 @@ jobs:
       - id: shellcheck
         if: ${{ steps.run-info.outputs.scripts }}
         continue-on-error: true
+        env:
+          ARGS: --external-sources --exclude=2230 --color=auto ${{ steps.run-info.outputs.scripts }}
         run: |
           TMP="$(mktemp)"
-          STDOUT="$(docker run -it --rm --workdir /github/workspace -v "$PWD:/github/workspace" docker.io/koalaman/shellcheck-alpine:v0.9.0 2> "$TMP")"
+          STDOUT="$(docker run -it --rm --workdir /github/workspace -v "$PWD:/github/workspace" docker.io/koalaman/shellcheck-alpine:v0.9.0 $ARGS 2> "$TMP")"
           STDERR="$(< "$TMP")"
           echo -e "$STDOUT\n$STDERR"
           echo "stdout=$STDOUT" >> $GITHUB_OUTPUT
