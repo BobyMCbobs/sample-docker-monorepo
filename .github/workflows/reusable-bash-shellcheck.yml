@@ -22,9 +22,11 @@ jobs:
         if: ${{ steps.run-info.outputs.scripts }}
         continue-on-error: true
         env:
+          IMAGE: docker.io/koalaman/shellcheck-alpine:v0.9.0
           ARGS: --external-sources --exclude=2230 --color=auto ${{ steps.run-info.outputs.scripts }}
         run: |
-          STDOUT="$(docker run --rm --workdir /github/workspace -v "$PWD:/github/workspace" --entrypoint shellcheck docker.io/koalaman/shellcheck-alpine:v0.9.0 $ARGS 2>&1 || true)"
+          docker pull "$IMAGE"
+          STDOUT="$(docker run --rm --workdir /github/workspace -v "$PWD:/github/workspace" --entrypoint shellcheck $IMAGE $ARGS 2>&1 || true)"
           echo -e "$STDOUT"
           echo "stdout=$STDOUT" >> $GITHUB_OUTPUT
       - name: print stuff
