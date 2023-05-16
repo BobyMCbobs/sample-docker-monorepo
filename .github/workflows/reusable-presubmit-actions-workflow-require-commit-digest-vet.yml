@@ -26,7 +26,7 @@ jobs:
       - name: display actions
         run: |
           echo -e '${{ steps.actions-per-workflow.outputs.actions }}' | yq e -P
-      - name: Update Pull Request
+      - name: Create issue comment in pull request
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
         if: ${{ github.event_name == 'pull_request' }}
         with:
@@ -37,7 +37,7 @@ jobs:
             const githubRepo = `${{ github.repository }}`
             const invalidActions = JSON.parse(actionsJSONString).filter(i => {
               i.actions = i.actions.filter(v => {
-                return !(re.test(v) || v.includes(githubRepo))
+                return !(re.test(v) || v.includes(githubRepo) || v.startsWith('docker://'))
               })
               if (i.actions.length === 0) {
                 return
@@ -46,7 +46,7 @@ jobs:
             })
 
             if (invalidActions.length === 0) {
-              console.log(`All actions are valid and correctly formatted; exiting...`)
+              console.log(`All actions are valid and formatted correctly. Exiting...`)
               return
             }
 
