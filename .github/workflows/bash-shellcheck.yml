@@ -1,0 +1,15 @@
+name: bash shellcheck
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+      - master
+      - canon
+  pull_request: {}
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  bash-shellcheck:
+    uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-bash-shellcheck.yml@main
