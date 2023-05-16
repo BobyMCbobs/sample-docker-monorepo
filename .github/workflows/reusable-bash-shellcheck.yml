@@ -19,4 +19,4 @@ jobs:
         if: ${{ steps.run-info.outputs.scripts }}
         uses: docker://docker.io/koalaman/shellcheck-alpine:v0.9.0
         with:
-          args: --external-sources --exclude=2230 --color=auto ${{ steps.run-info.outputs.scripts }}
+          args: shellcheck --external-sources --exclude=2230 --color=auto ${{ steps.run-info.outputs.scripts }}
