@@ -29,16 +29,20 @@ on:
         default: ./Dockerfile
         description: |
           path to the image dockerfile.
-      tag:
+      tags:
         required: false
         type: string
         default: latest
         description: |
-          the tag to set image as.
+          a comma separated list of tags to image tags.
+          e.g:
+            - latest,20230607,git-deadb33f
+            - cooltag,v2.0.2
+            - latest
       platforms:
         required: false
         type: string
-        default: 'linux/amd64'
+        default: "linux/amd64"
         description: |
           comma-separated list of platforms to build with.
           e.g: linux/amd64,linux/arm64
@@ -87,21 +91,30 @@ jobs:
       - id: run-info
         name: collect job run info
         env:
+          REGISTRY_OVERRIDE: ${{ inputs.registryOverride }}
           GHCR_DOCKER_REPO: ghcr.io/${{ github.repository }}
+          IMAGE_NAME: ${{ inputs.imageName }}
+          TAGS: ${{ inputs.tags }}
         run: |
-          TAG="${{ inputs.tag }}"
-          TAG="${TAG:-latest}"
-          if [ -n "${{ inputs.registryOverride }}" ]; then
-            echo "image-with-tag=${{ inputs.registryOverride }}/${{ inputs.imageName }}:$TAG" >> $GITHUB_OUTPUT
-          else
-            echo "image-with-tag=${GHCR_DOCKER_REPO,,}/${{ inputs.imageName }}:$TAG" >> $GITHUB_OUTPUT
-          fi
+          TAGS="${TAGS:-latest}"
+          REGISTRY="${GHCR_DOCKER_REPO,,}"
+          [ -z "$REGISTRY_OVERRIDE" ] || REGISTRY="$REGISTRY_OVERRIDE"
+          IMAGES_WITH_TAGS=""
+          for TAG in $(echo $TAGS | tr ',' ' '); do
+            NEW_TAG="$REGISTRY/$IMAGE_NAME:$TAG"
+            if [ -n "$IMAGES_WITH_TAGS" ]; then
+              IMAGES_WITH_TAGS="$NEW_TAG,$IMAGES_WITH_TAGS"
+            else
+              IMAGES_WITH_TAGS="$NEW_TAG"
+            fi
+          done
+          echo "images-with-tags=$IMAGES_WITH_TAGS" >> $GITHUB_OUTPUT
       - name: Build and push
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # v4.0.0
         id: build
         with:
           push: ${{ inputs.push }}
-          tags: ${{ steps.run-info.outputs.image-with-tag }}
+          tags: ${{ steps.run-info.outputs.images-with-tags }}
           context: ${{ inputs.context }}
           platforms: ${{ inputs.platforms }}
           file: ${{ inputs.dockerfile }}
