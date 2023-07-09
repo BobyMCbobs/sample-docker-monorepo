@@ -127,7 +127,7 @@ jobs:
         id: get-digests
         if: ${{ inputs.push }}
         env:
-          DESTINATION: ${{ steps.run-info.outputs.image-with-tag }}
+          DESTINATION: ${{ steps.run-info.outputs.image }}@${{ steps.build.outputs.digest }}
         run: |
           DESTINATION_DIGEST="$(crane digest "${DESTINATION}" || true)"
           (
