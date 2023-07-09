@@ -108,6 +108,7 @@ jobs:
               IMAGES_WITH_TAGS="$NEW_TAG"
             fi
           done
+          echo "image=$REGISTRY/$IMAGE_NAME" >> $GITHUB_OUTPUT
           echo "images-with-tags=$IMAGES_WITH_TAGS" >> $GITHUB_OUTPUT
       - name: Build and push
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # v4.0.0
@@ -139,11 +140,11 @@ jobs:
         env:
           COSIGN_YES: "true"
         run: |
-          cosign sign ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }} -y --recursive
+          cosign sign ${{ steps.run-info.outputs.image }}@${{ steps.get-digests.outputs.destination }} -y --recursive
       - uses: anchore/sbom-action@422cb34a0f8b599678c41b21163ea6088edb2624 # v0.14.1
         if: ${{ inputs.push }}
         with:
-          image: ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}
+          image: ${{ steps.run-info.outputs.image }}@${{ steps.get-digests.outputs.destination }}
           artifact-name: sbom-spdx.json
           output-file: /tmp/sbom-spdx.json
       - name: publish sbom blob as blob
@@ -151,12 +152,12 @@ jobs:
         env:
           COSIGN_YES: "true"
         run: |
-          cosign attest --predicate /tmp/sbom-spdx.json ${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }} --recursive
+          cosign attest --predicate /tmp/sbom-spdx.json ${{ steps.run-info.outputs.image }}@${{ steps.get-digests.outputs.destination }} --recursive
       - name: image
         if: ${{ inputs.push }}
         id: image
         run: |
-          echo "image=${{ steps.run-info.outputs.image-with-tag }}@${{ steps.get-digests.outputs.destination }}" >> $GITHUB_OUTPUT
+          echo "image=${{ steps.run-info.outputs.image }}@${{ steps.get-digests.outputs.destination }}" >> $GITHUB_OUTPUT
       - name: image result
         if: ${{ inputs.push }}
         id: result

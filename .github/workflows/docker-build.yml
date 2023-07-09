@@ -22,19 +22,19 @@ jobs:
       - uses: mikefarah/yq@d2f1ae9db722ac6b0702dd7f8a08dd22722d8c2d # v4.33.3
       - id: set
         run: |
-          echo "matrix=$(find $FOLDER -mindepth 1 -maxdepth 1 -type d | xargs -n 1 basename | xargs | yq 'split(" ")|.[]|{"target":.}' -ojson | jq -rcM -s .)" >> $GITHUB_OUTPUT
+          echo "matrix=$(find $FOLDER -mindepth 1 -maxdepth 1 -type d | xargs -n 1 basename | xargs | yq 'split(" ")|.[]|{"target":.}' -ojson | jq -rcM -s '{"include":.}')" >> $GITHUB_OUTPUT
       - name: check output
         run: |
           jq . <<< '${{ steps.prepare.outputs.matrix }}'
   build:
     needs: prepare
     strategy:
-      matrix:
-        include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-docker-build.yml@main
     with:
       context: apps/${{ fromJSON(toJSON(matrix)).target }}
       dockerfile: apps/${{ fromJSON(toJSON(matrix)).target }}/Dockerfile
       imageName: ${{ fromJSON(toJSON(matrix)).target }}
-      platforms: 'linux/amd64,linux/arm64'
+      platforms: "linux/amd64,linux/arm64"
+      tags: latest,git-${{ github.sha }}
       push: ${{ github.ref_name == 'main' }}
