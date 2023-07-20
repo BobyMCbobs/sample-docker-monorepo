@@ -5,4 +5,4 @@ on:
   workflow_dispatch: {}
 jobs:
   dockerfile-lint:
-    uses: GeoNet/Actions/.github/workflows/reusable-dockerfile-lint.yml@main
+    uses: BobyMCbobs/sample-docker-monorepo/.github/workflows/reusable-dockerfile-lint.yml@main
