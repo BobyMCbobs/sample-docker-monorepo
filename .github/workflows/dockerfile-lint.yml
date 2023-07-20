@@ -1,0 +1,8 @@
+name: dockerfile-lint
+on:
+  push: {}
+  pull_request: {}
+  workflow_dispatch: {}
+jobs:
+  dockerfile-lint:
+    uses: GeoNet/Actions/.github/workflows/reusable-dockerfile-lint.yml@main
